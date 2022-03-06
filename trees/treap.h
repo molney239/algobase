@@ -9,8 +9,8 @@ namespace treap {
         node(T x, unsigned long long y) {
             this->x = x;
             this->y = y;
-            this->left = nullptr;
-            this->right = nullptr;
+            left = nullptr;
+            right = nullptr;
         }
 
         T x;
@@ -68,7 +68,7 @@ namespace treap {
     }
 
     template<typename T>
-    node<T>* search(node<T>* a, T value) {
+    node<T>* get(node<T>* a, T value) {
         if (a == nullptr) return nullptr;
         if (a->x == value) return a;
         if (a->x < value) return search(a->right, value);
@@ -92,9 +92,9 @@ namespace implicit_treap {
     struct node {
 
         node(T value, unsigned long long y) {
-            size = 1;
-            this->y = y;
             this->value = value;
+            this->y = y;
+            size = 1;
 
             left = nullptr;
             right = nullptr;
@@ -104,9 +104,9 @@ namespace implicit_treap {
             size = (left == nullptr ? 0 : left->size) + (right == nullptr ? 0 : right->size) + 1;
         }
 
-        unsigned size;
-        unsigned long long y;
         T value;
+        unsigned long long y;
+        unsigned size;
 
         node* left;
         node* right;
