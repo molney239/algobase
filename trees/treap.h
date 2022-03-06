@@ -36,7 +36,7 @@ namespace treap {
 
     template<typename T>
     std::pair<node<T>*, node<T>*> split(node<T>* a, T value) {
-        if (a == nullptr) return std::pair<node<T>*, node<T>*>(nullptr, nullptr);
+        if (a == nullptr) return make_pair(nullptr, nullptr);
         if (a->x < value) {
             auto p = split(a->right, value);
             a->right = p.first;
@@ -82,6 +82,106 @@ namespace treap {
         p.second = split(p.second, x + 1).second;
         a = merge(p.first, p.second);
         return a;
+    }
+
+}
+
+namespace implicit_treap {
+
+    template<typename T>
+    struct node {
+
+        node(T value, unsigned long long y) {
+            size = 1;
+            this->y = y;
+            this->value = value;
+
+            left = nullptr;
+            right = nullptr;
+        }
+
+        void update() {
+            size = (left == nullptr ? 0 : left->size) + (right == nullptr ? 0 : right->size) + 1;
+        }
+
+        unsigned size;
+        unsigned long long y;
+        T value;
+
+        node* left;
+        node* right;
+
+    };
+
+    template<typename T>
+    node<T>* merge(node<T>* a, node<T>* b) {
+        if (a == nullptr) return b;
+        if (b == nullptr) return a;
+
+        if (a->y > b->y) {
+            a->right = merge(a->right, b);
+            a->update();
+            return a;
+        } else {
+            b->left = merge(a, b->left);
+            b->update();
+            return b;
+        }
+    }
+
+    // k-th node (in 0-indexation) is min in right tree
+    template<typename T>
+    pair<node<T>*, node<T>*> split(node<T>* a, unsigned k) {
+        if (a == nullptr) return make_pair(nullptr, nullptr);
+
+        unsigned l = (a->left == nullptr ? 0 : a->left->size);
+        if (l < k) {
+            auto p = split(a->right, k - l - 1);
+            a->right = p.first;
+            a->update();
+            return make_pair(a, p.second);
+        } else {
+            auto p = split(a->left, k);
+            a->left = p.second;
+            a->update();
+            return make_pair(p.first, a);
+        }
+    }
+
+    template<typename T>
+    node<T>* min(node<T>* a) {
+        if (a == nullptr) return nullptr;
+        if (a->left == nullptr) return a;
+        return min(a->left);
+    }
+
+    template<typename T>
+    node<T>* insert(node<T>* a, node<T>* new_node, unsigned pos) {
+        if (a == nullptr) return new_node;
+        if (new_node == nullptr) return a;
+
+        auto p = split(a, pos);
+        return merge(merge(p.first, new_node), p.second);
+    }
+
+    template<typename T>
+    node<T>* get(node<T>* a, unsigned pos) {
+        if (a == nullptr) return nullptr;
+
+        auto p = split(a, pos);
+        node<T>* res = min(p.second);
+        a = merge(p.first, p.second);
+        return res;
+    }
+
+    template<typename T>
+    node<T>* remove(node<T>* a, unsigned pos) {
+        if (a == nullptr) return nullptr;
+
+        auto p1 = split(a, pos);
+        auto p2 = split(p1.second, 1);
+        delete p2.first;
+        return merge(p1.first, p2.second);
     }
 
 }
