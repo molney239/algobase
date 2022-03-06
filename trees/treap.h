@@ -40,11 +40,11 @@ namespace treap {
         if (a->x < value) {
             auto p = split(a->right, value);
             a->right = p.first;
-            return std::pair<node<T>*, node<T>*>(a, p.second);
+            return make_pair(a, p.second);
         } else {
             auto p = split(a->left, value);
             a->left = p.second;
-            return std::pair<node<T>*, node<T>*>(p.first, a);
+            return make_pair(p.first, a);
         }
     }
 
@@ -61,16 +61,15 @@ namespace treap {
         if (a == nullptr) return new_node;
 
         auto p = split(a, new_node->x);
-        if (p.second != nullptr && min(p.second)->x == new_node->x) {
-            a = merge(p.first, p.second);
-        } else a = merge(p.first, merge(new_node, p.second));
-        return a;
+        if (p.second != nullptr && min(p.second)->x == new_node->x) return merge(p.first, p.second);
+        else return merge(p.first, merge(new_node, p.second));
     }
 
     template<typename T>
     node<T>* get(node<T>* a, T value) {
         if (a == nullptr) return nullptr;
         if (a->x == value) return a;
+
         if (a->x < value) return search(a->right, value);
         else return search(a->left, value);
     }
@@ -78,10 +77,11 @@ namespace treap {
     template<typename T>
     node<T>* remove(node<T>* a, T x) {
         if (a == nullptr) return nullptr;
-        auto p = split(a, x);
-        p.second = split(p.second, x + 1).second;
-        a = merge(p.first, p.second);
-        return a;
+
+        auto p1 = split(a, x);
+        auto p2 = split(p1.second, x + 1);
+        delete p2.first;
+        return merge(p1.first, p2.second);
     }
 
 }
