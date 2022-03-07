@@ -63,23 +63,24 @@ namespace numerical {
     template<typename T>
     std::vector<T> divisors(T n) {
         std::vector<T> result;
-        for (T c = 1; c * c <= n; c++) {
+        for (T c = 1; c * c < n; c++) {
             if (n % c == 0) {
                 result.push_back(c);
-                if (c * c != n) result.push_back(n / c);
+                result.push_back(n / c);
             }
         }
+        if (c * c == n) result.push_back(c);
 
         return result;
     }
 
     template<typename T>
-    int divisors_count(T n) {
-        int count = 0;
-        for (T c = 1; c * c <= n; c++) {
+    unsigned divisors_count(T n) {
+        unsigned count = 0;
+        for (T c = 1; c * c < n; c++) {
             if (n % c == 0) count++;
-            if (c * c != n) count++;
         }
+        if (c * c == n) count++;
         return count;
     }
 
