@@ -3,6 +3,10 @@
 
 namespace treap {
 
+    unsigned long long rand_ull() {
+        return ((unsigned long long)(rand()) << 32) + rand();
+    }
+
     template<typename T>
     struct node {
 

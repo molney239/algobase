@@ -27,8 +27,8 @@ namespace numerical {
             y = 0;
             return a;
         }
-        int x1, y1;
-        int d = extended_gcd(b, a % b, x1, y1);
+        T x1, y1;
+        T d = extended_gcd(b, a % b, x1, y1);
 
         x = y1;
         y = x1 - y1 * (T)(a / b);
@@ -48,7 +48,7 @@ namespace numerical {
     template<typename T>
     std::vector<T> factorize(T n) {
         std::vector<T> result;
-        for (int c = 2; c * c <= n; c++) {
+        for (T c = 2; c * c <= n; c++) {
             while (n % c == 0) {
                 n /= c;
                 result.push_back(c);
@@ -63,7 +63,7 @@ namespace numerical {
     template<typename T>
     std::vector<T> divisors(T n) {
         std::vector<T> result;
-        for (int c = 1; c * c <= n; c++) {
+        for (T c = 1; c * c <= n; c++) {
             if (n % c == 0) {
                 result.push_back(c);
                 if (c * c != n) result.push_back(n / c);
@@ -76,7 +76,7 @@ namespace numerical {
     template<typename T>
     int divisors_count(T n) {
         int count = 0;
-        for (int c = 1; c * c <= n; c++) {
+        for (T c = 1; c * c <= n; c++) {
             if (n % c == 0) count++;
             if (c * c != n) count++;
         }

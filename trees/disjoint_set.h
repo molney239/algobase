@@ -8,6 +8,7 @@ namespace disjoint_set {
     void build(std::vector<unsigned>& parents, std::vector<unsigned>& size, unsigned n) {
         parents.resize(n);
         size.resize(n);
+
         for (int i = 0; i < n; i++) {
             parents[i] = i;
             size[i] = 1;
@@ -25,6 +26,7 @@ namespace disjoint_set {
         b = find_set(parents, b);
         if (a == b) return;
         if (size[a] < size[b]) swap(a, b);
+
         parents[b] = a;
         size[a] += size[b];
     }
