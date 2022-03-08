@@ -3,6 +3,18 @@
 
 namespace function_search {
 
+
+    /**
+     *
+     * Searches least argument in range [l; r] for which function returns true.
+     *
+     * @tparam T Type of function argument
+     * @param l Left range bound
+     * @param r Right range bound
+     * @param step Step for search
+     * @param good Function for search
+     * @return Least argument in range [l; r] for which function returns true
+     */
     template<typename T>
     T linear_search(T l, T r, T step, bool (*good) (T)) {
         T pos = l;
@@ -13,6 +25,19 @@ namespace function_search {
         return r;
     }
 
+
+    /**
+     * Searches least argument in range [l; r] for which function returns true.
+     *
+     * @tparam T Type of function argument
+     * @tparam Args Parameter pack for additional function arguments
+     * @param l Left range bound
+     * @param r Right range bound
+     * @param step Step for search
+     * @param good Function for search
+     * @param args Additional arguments for function
+     * @return Least argument in range [l; r] for which function returns true
+     */
     template<typename T, typename... Args>
     T linear_search(T l, T r, T step, bool (*good) (T, Args...), Args... args) {
         T pos = l;
@@ -23,6 +48,17 @@ namespace function_search {
         return r;
     }
 
+
+    /**
+     * Searches least argument in range [l; r] for which monotonically increasing function returns true.
+     *
+     * @tparam T Type of function argument
+     * @param l Left range bound
+     * @param r Right range bound
+     * @param precision Precision for binary search bounds
+     * @param good Monotonically increasing function for search
+     * @return Least argument in range [l; r] for which function returns true
+     */
     template<typename T>
     T binary_search(T l, T r, T precision, bool (*good) (T)) {
         T mid;
@@ -34,6 +70,19 @@ namespace function_search {
         return r;
     }
 
+
+    /**
+     * Searches least argument in range [l; r] for which monotonically increasing function returns true.
+     *
+     * @tparam T Type of function argument
+     * @tparam Args Parameter pack for additional function arguments
+     * @param l Left range bound
+     * @param r Right range bound
+     * @param precision Precision for binary search bounds
+     * @param good Monotonically increasing function for search
+     * @param args Additional arguments for function
+     * @return Least argument in range [l; r] for which function returns true
+     */
     template<typename T, typename... Args>
     T binary_search(T l, T r, T precision, bool (*good) (T, Args...), Args... args) {
         T mid;
@@ -45,25 +94,53 @@ namespace function_search {
         return r;
     }
 
+
+    /**
+     * Searches for the function argument for which it reaches its minimum on range [l; r].
+     * The function must first be monotonically decreasing and then monotonically increasing.
+     *
+     * @tparam T1 Type of function argument
+     * @tparam T2 Function return type
+     * @param l Left range bound
+     * @param r Right range bound
+     * @param precision Precision for ternary search bounds
+     * @param func Function for search
+     * @return Function argument at which it reaches its minimum
+     */
     template<typename T1, typename T2>
-    T1 ternary_search(T1 l, T1 r, T1 precision, T2 (*f) (T1)) {
+    T1 ternary_search(T1 l, T1 r, T1 precision, T2 (*func) (T1)) {
         T1 mid1, mid2;
         while (r - l > precision * 3) {
             mid1 = l + (r - l) / 3.0;
             mid2 = r - (r - l) / 3.0;
-            if (f(mid1) < f(mid2)) l = mid1;
+            if (func(mid1) < func(mid2)) l = mid1;
             else r = mid2;
         }
         return r;
     }
 
+
+    /**
+     * Searches for the function argument for which it reaches its minimum on range [l; r].
+     * The function must first be monotonically decreasing and then monotonically increasing.
+     *
+     * @tparam T1 Type of function argument
+     * @tparam T2 Function return type
+     * @tparam Args Parameter pack for additional function arguments
+     * @param l Left range bound
+     * @param r Right range bound
+     * @param precision Precision for ternary search bounds
+     * @param func Function for search
+     * @param args Additional arguments for function
+     * @return Function argument at which it reaches its minimum
+     */
     template<typename T1, typename T2, typename... Args>
-    T1 ternary_search(T1 l, T1 r, T1 precision, T2 (*f) (T1, Args...), Args... args) {
+    T1 ternary_search(T1 l, T1 r, T1 precision, T2 (*func) (T1, Args...), Args... args) {
         T1 mid1, mid2;
         while (r - l > precision) {
             mid1 = l + (r - l) / 3.0;
             mid2 = r - (r - l) / 3.0;
-            if (f(mid1, args...) < f(mid2, args...)) l = mid1;
+            if (func(mid1, args...) < func(mid2, args...)) l = mid1;
             else r = mid2;
         }
         return r;
