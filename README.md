@@ -30,5 +30,6 @@ Different algorithms for sorting array.
 Data structures based on trees:
  * Binary heap
  * Segment tree
+ * Fenwick (Binary indexed) tree
  * Cartesian tree (treap)
  * Disjoint set
