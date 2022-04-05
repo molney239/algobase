@@ -3,6 +3,10 @@ This is a repository with implementations of many algorithms and data structures
 
 # List of contents
 
+##dp
+Some dynamical programming problems:
+ * Longest increasing subsequence (LIS)
+
 ## function_search
 This directory contains implementations of search algorithms:
  * Linear search
