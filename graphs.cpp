@@ -136,7 +136,7 @@ graph_type edge_biconnected_condense(graph_type& g) {
     return g_cond;
 }
 
-// strongly-connected components
+// strongly connected components
 
 void __scc_color(graph_type& g, vector<int>& color, int pos, int c) {
     color[pos] = c;

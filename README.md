@@ -1,39 +1,25 @@
-# _algobase_: Algorithms and data structures collection
-This is a repository with implementations of many algorithms and data structures in C++. It will be useful for studying computer science, practicing C++, preparing for interviews, and solving competitive problems.
+# _algobase_: Algorithms and data structures templates
+This is a repository with implementations of many algorithms and data structures in C++.
+It was written for using in competitive programming as templates to save time and do not get distracted by writing a theoretical algorithms.
 
 # List of contents
+Repository includes C++ files which contains implementation of following algorithms and data structures:
 
-##dp
-Some dynamical programming problems:
- * Longest increasing subsequence (LIS)
+## graphs.cpp
+ - *graph* - template for graphs (used below)
+ - *multi edges* - function to remove multi edges from graph
+ - *topological sort* - toplogical sort of graph or part of it
+ - *bridges* - selection of bridges in graph
+ - *edge biconnected components* - coloring and condensation of graph by edge biconnected components
+ - *strongly connected components* - coloring and condensation of graph by strongly connected components
+ - *2-SAT* - structure for solving 2-SAT problem
 
-## function_search
-This directory contains implementations of search algorithms:
- * Linear search
- * Binary search (for monotonic function)
- * Ternary search
+## strings.cpp
+ - *trie* - trie structure for strings
+ - *number trie* - trie structure for integers
+ - *hash* - structure for polynomial hashing
 
-## graphs
-It's includes algorithms on graphs:
- * Depth-first and breadth-first search
-
-## numerical
-Numerical and math algorithms:
- * GCD, LCM and extended Euclidean algorithm
- * Prime test and factorization
-
-## sorts
-Different algorithms for sorting array.
- * Selection sort
- * Insertion sort
- * Bubble sort
- * Merge sort
- * Heap sort
-
-## trees
-Data structures based on trees:
- * Binary heap
- * Segment tree
- * Fenwick (Binary indexed) tree
- * Cartesian tree (treap)
- * Disjoint set
+## trees.cpp
+ - *treap* - treap and implicit treap structures
+ - *fenwick tree* - Fenwick tree structure and it's version with range operations
+ - *2D fenwick tree* - 2-dimensional Fenwick tree structure and it's version with range operations
