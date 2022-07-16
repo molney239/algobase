@@ -499,3 +499,101 @@ protected:
     vector<vector<T>> f_ij, f_i, f_j, f_const;
 
 };
+
+// segment tree
+
+template<typename T>
+struct segment_tree {
+
+    segment_tree(unsigned n, T neutral) : n(n), neutral(neutral) {
+        tree.resize(n * 4, neutral);
+        mark.resize(n * 4, neutral);
+        marked.resize(n * 4, false);
+    }
+
+    segment_tree(const vector<T>& v, T neutral) : n(v.size()), neutral(neutral) {
+        tree.resize(v.size() * 4);
+        mark.resize(v.size() * 4, neutral);
+        marked.resize(v.size() * 4, false);
+        build(v, 0, 0, n - 1);
+    }
+
+    T get(int l, int r) {
+        assert(0 <= l && l <= r && r < n);
+        return get(l, r, 0, 0, n - 1);
+    }
+
+    void set(int l, int r, T value) {
+        assert(0 <= l && l <= r && r < n);
+        set(l, r, value, 0, 0, n - 1);
+    }
+
+protected:
+
+    T merge(T a, T b) {
+        return a + b;
+    }
+
+    void build(const vector<T>& v, int pos, int tl, int tr) {
+        if (tl == tr) {
+            tree[pos] = v[tl];
+            return;
+        }
+
+        int m = (tl + tr) >> 1;
+        build(v, pos * 2 + 1, tl, m);
+        build(v, pos * 2 + 2, m + 1, tr);
+        tree[pos] = merge(tree[pos * 2 + 1], tree[pos * 2 + 2]);
+    }
+
+    void push(int pos, int tl, int tr) {
+        if (!marked[pos]) return;
+
+        if (tl != tr) {
+            int m = (tl + tr) >> 1;
+
+            marked[pos * 2 + 1] = true;
+            mark[pos * 2 + 1] = mark[pos];
+            tree[pos * 2 + 1] = mark[pos] * (m - tl + 1);
+
+            marked[pos * 2 + 2] = true;
+            mark[pos * 2 + 2] = mark[pos];
+            tree[pos * 2 + 2] = mark[pos] * (tr - m);
+        }
+
+        marked[pos] = false;
+    }
+
+    T get(int& l, int& r, int pos, int tl, int tr) {
+        if (tr < l || r < tl) return neutral;
+        if (l <= tl && tr <= r) return tree[pos];
+
+        push(pos, tl, tr);
+        int m = (tl + tr) >> 1;
+        return merge(get(l, r, pos * 2 + 1, tl, m),
+                     get(l, r, pos * 2 + 2, m + 1, tr));
+    }
+
+    void set(int& l, int& r, T& value, int pos, int tl, int tr) {
+        if (tr < l || r < tl) return;
+        push(pos, tl, tr);
+        if (l <= tl && tr <= r) {
+            marked[pos] = true;
+            mark[pos] = value;
+            tree[pos] = value * (tr - tl + 1);
+            return;
+        }
+
+        int m = (tl + tr) >> 1;
+        set(l, r, value, pos * 2 + 1, tl, m);
+        set(l, r, value, pos * 2 + 2, m + 1, tr);
+        tree[pos] = merge(tree[pos * 2 + 1], tree[pos * 2 + 2]);
+    }
+
+    int n;
+    T neutral;
+
+    vector<T> tree, mark;
+    vector<bool> marked;
+
+};
