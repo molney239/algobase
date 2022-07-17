@@ -408,7 +408,13 @@ protected:
 
 // LCA
 
-struct lca_binups {
+struct LCA {
+
+    virtual int get(int a, int b) = 0;
+
+};
+
+struct lca_binups : LCA {
 
     lca_binups(const graph_type& g, int root) {
         assert(0 <= root && root < g.size());
@@ -434,7 +440,7 @@ struct lca_binups {
         }
     }
 
-    int get(int a, int b) {
+    int get(int a, int b) override {
         assert(0 <= min(a, b) && max(a, b) < n);
 
         if (dist[a] > dist[b]) swap(a, b);
@@ -480,43 +486,43 @@ protected:
 
 };
 
-struct lca_segment_tree {
+struct lca_segment_tree : LCA {
 
     lca_segment_tree(const graph_type& g, int root) {
         assert(0 <= root && root < g.size());
         n = g.size();
 
+        dist.resize(n);
         tin.resize(n);
 
         vector<bool> visited(n, false);
         int t = 0;
         eulerian_tour(g, visited, root, 0, t);
+        vertices.shrink_to_fit();
 
-        tree.resize(d.size() * 4);
-        build(0, 0, (int)d.size() - 1);
+        tree.resize(vertices.size() * 4);
+        build(0, 0, (int)vertices.size() - 1);
     }
 
-    int get(int a, int b) {
+    int get(int a, int b) override {
         assert(0 <= min(a, b) && max(a, b) < n);
 
         int t1 = min(tin[a], tin[b]), t2 = max(tin[a], tin[b]);
-        return vertices[get(t1, t2, 0, 0, (int)d.size() - 1)];
+        return get(t1, t2, 0, 0, (int)vertices.size() - 1);
     }
 
 protected:
 
-    void eulerian_tour(const graph_type& g, vector<bool>& visited, int pos, int dist, int& t) {
+    void eulerian_tour(const graph_type& g, vector<bool>& visited, int pos, int d, int& t) {
         visited[pos] = true;
-
-        d.emplace_back(dist);
+        dist[pos] = d;
         vertices.emplace_back(pos);
         tin[pos] = t++;
 
         for (auto e : g[pos]) {
             if (!visited[e.to]) {
-                eulerian_tour(g, visited, e.to, dist + 1, t);
+                eulerian_tour(g, visited, e.to, d + 1, t);
 
-                d.emplace_back(dist);
                 vertices.emplace_back(pos);
                 t++;
             }
@@ -526,13 +532,13 @@ protected:
     inline int merge(int a, int b) {
         if (a == -1) return b;
         if (b == -1) return a;
-        if (d[a] < d[b]) return a;
+        if (dist[a] < dist[b]) return a;
         return b;
     }
 
     void build(int pos, int tl, int tr) {
         if (tl == tr) {
-            tree[pos] = tl;
+            tree[pos] = vertices[tl];
             return;
         }
 
@@ -552,12 +558,12 @@ protected:
     }
 
     int n;
-    vector<int> d, vertices, tin;
+    vector<int> vertices, dist, tin;
     vector<int> tree;
 
 };
 
-struct lca_sparse_table {
+struct lca_sparse_table : LCA {
 
     lca_sparse_table(const graph_type& g, int root) {
         assert(0 <= root && root < g.size());
@@ -579,7 +585,7 @@ struct lca_sparse_table {
         }
     }
 
-    int get(int a, int b) {
+    int get(int a, int b) override {
         assert(0 <= min(a, b) && max(a, b) < n);
 
         int t1 = min(tin[a], tin[b]), t2 = max(tin[a], tin[b]);
@@ -621,6 +627,33 @@ protected:
     int n, lg_t;
     vector<int> d, vertices, tin;
     vector<vector<int>> sparse;
+
+};
+
+struct dynamic_lca : LCA {
+
+    dynamic_lca(LCA& __lca, const graph_type& g, int root) : __lca(__lca) {
+        assert(0 <= root && root < g.size());
+        n = g.size();
+        this->root = root;
+    }
+
+    int get(int a, int b) override {
+        assert(0 <= min(a, b) && max(a, b) <= n);
+
+        int v1 = __lca.get(a, b), v2 = __lca.get(a, root), v3 = __lca.get(root, b);
+        return v1 ^ v2 ^ v3;
+    }
+
+    void change_root(int new_root) {
+        assert(0 <= new_root && new_root < n);
+        root = new_root;
+    }
+
+protected:
+
+    int n, root;
+    LCA& __lca;
 
 };
 

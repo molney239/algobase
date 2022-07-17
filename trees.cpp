@@ -3,12 +3,12 @@ using namespace std;
 
 mt19937_64 rnd(chrono::duration_cast<chrono::nanoseconds>(chrono::system_clock::now().time_since_epoch()).count());
 
-//treap
+// treap
 
 template<typename T>
 struct treap_node {
 
-    treap_node(T value) : value(value) {
+    treap_node(T value, treap_node<T>* parent = nullptr) : value(value), parent(parent) {
         y = rnd();
     }
 
@@ -20,6 +20,7 @@ struct treap_node {
     unsigned long long y;
     unsigned size = 1;
 
+    treap_node<T>* parent = nullptr;
     treap_node<T>* left = nullptr;
     treap_node<T>* right = nullptr;
 
@@ -30,13 +31,23 @@ unsigned get_size(treap_node<T>* node) {
     return (node == nullptr ? 0 : node->size);
 }
 
-template<typename T>
-struct treap {
+namespace treap {
 
-    treap() {
-
+    template<typename T>
+    treap_node<T>* left(treap_node<T>* node) {
+        if (node == nullptr) return nullptr;
+        if (node->left == nullptr) return node;
+        return left(node->left);
     }
 
+    template<typename T>
+    treap_node<T>* right(treap_node<T>* node) {
+        if (node == nullptr) return nullptr;
+        if (node->right == nullptr) return node;
+        return right(node->right);
+    }
+
+    template<typename T>
     treap_node<T>* merge(treap_node<T>* a, treap_node<T>* b) {
         if (a == nullptr) return b;
         if (b == nullptr) return a;
@@ -44,102 +55,83 @@ struct treap {
 
         if (a->y > b->y) {
             a->right = merge(a->right, b);
+            if (a->right != nullptr) a->right->parent = a;
             a->recalc();
             return a;
         } else {
             b->left = merge(a, b->left);
+            if (b->left != nullptr) b->left->parent = b;
             b->recalc();
             return b;
         }
     }
 
     // first - < value, second - >= value
-    pair<treap_node<T>*, treap_node<T>*> split_by_value(treap_node<T>* node, T value) {
+    template<typename T>
+    pair<treap_node<T>*, treap_node<T>*> split(treap_node<T>* node, T value) {
         if (node == nullptr) return {nullptr, nullptr};
         if (node->value >= value) {
-            auto p = split_by_value(node->left, value);
+            auto p = split(node->left, value);
+
             node->left = p.second;
+            if (node->left != nullptr) node->left->parent = node;
             node->recalc();
+
+            if (p.first != nullptr) p.first->parent = nullptr;
             return {p.first, node};
         } else {
-            auto p = split_by_value(node->right, value);
+            auto p = split(node->right, value);
+
             node->right = p.first;
+            if (node->right != nullptr) node->right->parent = node;
             node->recalc();
+
+            if (p.second != nullptr) p.second->parent = nullptr;
             return {node, p.second};
         }
     }
 
-    // first - k elements, second - other
-    pair<treap_node<T>*, treap_node<T>*> split_by_size(treap_node<T>* node, unsigned k) {
-        if (node == nullptr) return {nullptr, nullptr};
-        if (get_size(node->left) + 1 > k) {
-            auto p = split_by_size(node->left, k);
-            node->left = p.second;
-            node->recalc();
-            return {p.first, node};
-        } else {
-            auto p = split_by_size(node->right, k - get_size(node->left) - 1);
-            node->right = p.first;
-            node->recalc();
-            return {node, p.second};
-        }
-    }
-
-    void insert(treap_node<T>* node) {
-        auto p = split_by_value(root, node->value);
+    template<typename T>
+    treap_node<T>* insert(treap_node<T>* root, treap_node<T>* node) {
+        auto p = split(root, node->value);
         if (left(p.second) == nullptr || left(p.second)->value != node->value) {
-            root = merge(p.first, merge(node, p.second));
-        } else root = merge(p.first, p.second);
+            return merge(p.first, merge(node, p.second));
+        } else return merge(p.first, p.second);
     }
 
-    void insert(T value) {
-        insert(new treap_node<T>(value));
+    template<typename T>
+    treap_node<T>* insert(treap_node<T>* root, T value) {
+        return insert(root, new treap_node<T>(value));
     }
 
-    // returns treap with elements from [l; r)
-    treap_node<T>* cut_by_value(T l, T r) {
+    // returns {treap with elements from [l; r), node}
+    template<typename T>
+    pair<treap_node<T>*, treap_node<T>*> cut(treap_node<T>* node, T l, T r) {
         assert(l <= r);
 
-        auto p1 = split_by_value(root, r);
-        auto p2 = split_by_value(p1.first, l);
-        root = merge(p2.first, p1.second);
-
-        return p2.second;
+        auto p1 = split(node, r);
+        auto p2 = split(p1.first, l);
+        return {p2.second, merge(p2.first, p1.second)};
     }
 
-    // returns treap with indexes from [l; r)
-    treap_node<T>* cut_by_size(unsigned l, unsigned r) {
-        assert(l <= r && r <= get_size(root));
+    template<typename T>
+    treap_node<T>* get(treap_node<T>* node, int position) {
+        assert(0 <= position && position < get_size(node));
 
-        auto p1 = split_by_size(root, r);
-        auto p2 = split_by_size(p1.first, l);
-        root = merge(p2.first, p1.second);
-
-        return p2.second;
+        if (get_size(node->left) == position) return node;
+        if (get_size(node->left) < position) return get(node->right, position - get_size(node->left) - 1);
+        return get(node->left, position);
     }
 
-    treap_node<T>* left(treap_node<T>* node) {
-        if (node == nullptr) return nullptr;
-        if (node->left == nullptr) return node;
-        return left(node->left);
+    template<typename T>
+    int get_position(treap_node<T>* node) {
+        assert(node != nullptr);
+        if (node->parent == nullptr) return get_size(node->left);
+        if (node->parent->left == node) return get_position(node->parent);
+        return get_position(node->parent) + get_size(node->left) + 1;
     }
 
-    treap_node<T>* right(treap_node<T>* node) {
-        if (node == nullptr) return nullptr;
-        if (node->right == nullptr) return node;
-        return right(node->right);
-    }
-
-    T get(unsigned position) {
-        assert(position < get_size(root));
-
-        auto p = split(root, position);
-        T res = left(p.second)->value;
-        root = merge(p.first, p.second);
-
-        return res;
-    }
-
+    template<typename T>
     void print(treap_node<T>* node) {
         if (node == nullptr) return;
         print(node->left);
@@ -147,89 +139,107 @@ struct treap {
         print(node->right);
     }
 
-    treap_node<T>* root = nullptr;
+}
 
-};
+namespace implicit_treap {
 
-template<typename T>
-struct implicit_treap {
-
-    implicit_treap() {
-
+    template<typename T>
+    treap_node<T>* left(treap_node<T>* node) {
+        if (node == nullptr) return nullptr;
+        if (node->left == nullptr) return node;
+        return left(node->left);
     }
 
+    template<typename T>
+    treap_node<T>* right(treap_node<T>* node) {
+        if (node == nullptr) return nullptr;
+        if (node->right == nullptr) return node;
+        return right(node->right);
+    }
+
+    template<typename T>
     treap_node<T>* merge(treap_node<T>* a, treap_node<T>* b) {
         if (a == nullptr) return b;
         if (b == nullptr) return a;
+
         if (a->y > b->y) {
             a->right = merge(a->right, b);
+            if (a->right != nullptr) a->right->parent = a;
             a->recalc();
             return a;
         } else {
             b->left = merge(a, b->left);
+            if (b->left != nullptr) b->left->parent = b;
             b->recalc();
             return b;
         }
     }
 
     // first - k elements, second - other
+    template<typename T>
     pair<treap_node<T>*, treap_node<T>*> split(treap_node<T>* node, unsigned k) {
         if (node == nullptr) return {nullptr, nullptr};
         if (get_size(node->left) + 1 > k) {
             auto p = split(node->left, k);
+
             node->left = p.second;
+            if (node->left != nullptr) node->left->parent = node;
             node->recalc();
+
+            if (p.first != nullptr) p.first->parent = nullptr;
             return {p.first, node};
         } else {
             auto p = split(node->right, k - get_size(node->left) - 1);
+
             node->right = p.first;
+            if (node->right != nullptr) node->right->parent = node;
             node->recalc();
+
+            if (p.second != nullptr) p.second->parent = nullptr;
             return {node, p.second};
         }
     }
 
-    void insert(treap_node<T>* node, unsigned position) {
+    template<typename T>
+    treap_node<T>* insert(treap_node<T>* root, treap_node<T>* node, unsigned position) {
         assert(position <= get_size(root));
         auto p = split(root, position);
-        root = merge(p.first, merge(node, p.second));
+        return merge(p.first, merge(node, p.second));
     }
 
-    void insert(T value, unsigned position) {
-        insert(new treap_node<T>(value), position);
+    template<typename T>
+    treap_node<T>* insert(treap_node<T>* root, T value, unsigned position) {
+        return insert(root, new treap_node<T>(value), position);
     }
 
-    treap_node<T>* cut(unsigned l, unsigned r) {
-        assert(l <= r && r < get_size(root));
+    // returns {treap with indexes [l; r], node}
+    template<typename T>
+    pair<treap_node<T>*, treap_node<T>*> cut(treap_node<T>* node, unsigned l, unsigned r) {
+        assert(l <= r && r < get_size(node));
 
-        auto p1 = split(root, r + 1);
+        auto p1 = split(node, r + 1);
         auto p2 = split(p1.first, l);
-        root = merge(p2.first, p1.second);
-
-        return p2.second;
+        return {p2.second, merge(p2.first, p1.second)};
     }
 
-    treap_node<T>* left(treap_node<T>* node) {
-        if (node == nullptr) return nullptr;
-        if (node->left == nullptr) return node;
-        return left(node->left);
+    template<typename T>
+    treap_node<T>* get(treap_node<T>* node, int position) {
+        assert(0 <= position && position < get_size(node));
+
+        if (get_size(node->left) == position) return node;
+        if (get_size(node->left) < position) return get(node->right, position - get_size(node->left) - 1);
+        return get(node->left, position);
     }
 
-    treap_node<T>* right(treap_node<T>* node) {
-        if (node == nullptr) return nullptr;
-        if (node->right == nullptr) return node;
-        return right(node->right);
+    template<typename T>
+    int get_position(treap_node<T>* node) {
+        assert(node != nullptr);
+        if (node->parent == nullptr) return get_size(node->left);
+        if (node->parent->left == node) return get_position(node->parent);
+        return get_position(node->parent) + get_size(node->left) + 1;
     }
 
-    T& operator[] (unsigned position) {
-        assert(position < get_size(root));
-
-        auto p = split(root, position);
-        T& res = left(p.second)->value;
-        root = merge(p.first, p.second);
-
-        return res;
-    }
-
+    template<typename T>
     void print(treap_node<T>* node) {
         if (node == nullptr) return;
         print(node->left);
@@ -237,9 +247,7 @@ struct implicit_treap {
         print(node->right);
     }
 
-    treap_node<T>* root = nullptr;
-
-};
+}
 
 // fenwick tree
 

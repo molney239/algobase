@@ -3,15 +3,17 @@ using namespace std;
 
 // gcd
 
-template<typename T>
-T gcd(T a, T b) {
+long long gcd(long long a, long long b) {
     if (a < b) swap(a, b);
-    if (b == 0) return a;
-    return gcd(b, a % b);
+    while (b > 0) {
+        long long tmp = a;
+        a = b;
+        b = tmp % b;
+    }
+    return a;
 }
 
-template<typename T>
-T lcm(T a, T b) {
+long long lcm(long long a, long long b) {
     return (a * b) / gcd(a, b);
 }
 
