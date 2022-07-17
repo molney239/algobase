@@ -18,7 +18,7 @@ Repository includes C++ files which contains implementation of following algorit
 - *strongly connected components* - coloring and condensation of graph by strongly connected components
 - *2-SAT* - structure for solving 2-SAT problem
 - *level ancestor* - structures for level ancestor problem with binary search and binary ups
-- *LCA* - structures for LCA problem with binary ups, segment tree and sparse table
+- *LCA* - structures for dynamic LCA and LCA with binary ups, segment tree and sparse table
 - *tree path queries* - structure for answering queries on paths in trees using binary ups and LCA
 
 ### `strings.cpp`
