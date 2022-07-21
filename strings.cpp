@@ -296,114 +296,156 @@ protected:
 
 // hash
 
-#define ull unsigned long long
+typedef unsigned long long ull;
 
-namespace my_hash {
+struct hash_struct {
 
-    struct hash_struct {
+    hash_struct() {}
 
-        hash_struct() {
+    hash_struct(ull hash, int length, int base) :
+            hash(hash), length(length), base(base) {
+        assert(length >= 0 && base >= 0);
+    }
 
+    ull hash = 0;
+    int length = 0, base = 0;
+
+};
+
+struct my_hash {
+
+    my_hash(ull MOD, ull P) : MOD(MOD), P(P) {
+        pows.push_back(1);
+    }
+
+    template<typename T>
+    hash_struct get_hash(const vector<T>& v) {
+        extend_pows(v.size());
+
+        ull h = 0;
+        for (int i = 0; i < v.size(); i++) {
+            h += pows[i] * (ull)v[i];
+            h %= MOD;
         }
 
-        hash_struct(ull hash1, ull hash2, int length, int base) :
-                hash1(hash1), hash2(hash2), length(length), base(base) {
+        return hash_struct(h, v.size(), 0);
+    }
 
+    template<typename T>
+    vector<ull> get_prefix_hash(const vector<T>& v) {
+        extend_pows(v.size());
+
+        vector<ull> pref(v.size());
+        for (int i = 0; i < v.size(); i++) {
+            if (i > 0) pref[i] = pref[i - 1];
+            pref[i] += pows[i] * (ull)(v[i]);
+            pref[i] %= MOD;
         }
 
-        ull hash1 = 0, hash2 = 0;
-        unsigned length = 0, base = 0;
+        return pref;
+    }
 
-    };
+    hash_struct get_sub_hash(const vector<ull>& prefix, int l, int r) {
+        assert(0 <= min(l, r) && max(l, r) < prefix.size());
 
-    template<ull MOD1, ull MOD2, ull P>
-    struct hash {
+        return hash_struct((MOD + prefix[r] - (l == 0 ? 0 : prefix[l - 1])) % MOD, r - l + 1, l);
+    }
 
-        hash() {
-            pows1.push_back(1);
-            pows2.push_back(1);
+    hash_struct normalize(hash_struct h, int last_pow) {
+        assert(0 <= last_pow && h.base + h.length - 1 <= last_pow);
+
+        extend_pows(last_pow + 1);
+        int d = last_pow - (h.base + h.length - 1);
+
+        return hash_struct((h.hash * pows[d]) % MOD, h.length, h.base + d);
+    }
+
+    bool equal(hash_struct h1, hash_struct h2) {
+        if (h1.length != h2.length) return false;
+
+        int d = max(h1.base + h1.length - 1, h2.base + h2.length - 1);
+        h1 = normalize(h1, d);
+        h2 = normalize(h2, d);
+
+        return h1.hash == h2.hash;
+    }
+
+protected:
+
+    void extend_pows(int n) {
+        assert(0 <= n);
+        while (pows.size() < n) pows.push_back((pows.back() * P) % MOD);
+    }
+
+    ull MOD, P;
+    vector<ull> pows;
+
+};
+
+struct my_hash64 {
+
+    my_hash64(ull P) : P(P) {
+        pows.push_back(1);
+    }
+
+    template<typename T>
+    hash_struct get_hash(const vector<T>& v) {
+        extend_pows(v.size());
+
+        ull h = 0;
+        for (int i = 0; i < v.size(); i++) {
+            h += pows[i] * (ull)v[i];
         }
 
-        hash_struct get_hash(vector<ull> v) {
-            extend_pows(v.size());
+        return hash_struct(h, v.size(), 0);
+    }
 
-            ull h1 = 0, h2 = 0;
-            for (int i = 0; i < v.size(); i++) {
-                h1 += v[i] * pows1[i];
-                h1 %= MOD1;
-                h2 += v[i] * pows2[i];
-                h2 %= MOD2;
-            }
+    template<typename T>
+    vector<ull> get_prefix_hash(const vector<T>& v) {
+        extend_pows(v.size());
 
-            return hash_struct(h1, h2, v.size(), 0);
+        vector<ull> pref(v.size());
+        for (int i = 0; i < v.size(); i++) {
+            if (i > 0) pref[i] = pref[i - 1];
+            pref[i] += pows[i] * (ull)(v[i]);
         }
 
-        vector<hash_struct> get_prefix_hash(vector<ull> v) {
-            extend_pows(v.size());
+        return pref;
+    }
 
-            vector<hash_struct> res(v.size());
-            for (int i = 0; i < v.size(); i++) {
-                res[i].length = i + 1;
-                if (i > 0) {
-                    res[i].hash1 = res[i - 1].hash1;
-                    res[i].hash2 = res[i - 1].hash2;
-                }
+    hash_struct get_sub_hash(const vector<ull>& prefix, int l, int r) {
+        assert(0 <= min(l, r) && max(l, r) < prefix.size());
 
-                res[i].hash1 += v[i] * pows1[i];
-                res[i].hash1 %= MOD1;
-                res[i].hash2 += v[i] * pows2[i];
-                res[i].hash2 %= MOD2;
-            }
+        return hash_struct(prefix[r] - (l == 0 ? 0 : prefix[l - 1]), r - l + 1, l);
+    }
 
-            return res;
-        }
+    hash_struct normalize(hash_struct h, int last_pow) {
+        assert(0 <= last_pow && h.base + h.length - 1 <= last_pow);
 
-        hash_struct get_sub_hash(vector<hash_struct> prefix_hash, unsigned l, unsigned r) {
-            assert(l < prefix_hash.size() && r < prefix_hash.size());
+        extend_pows(last_pow + 1);
+        int d = last_pow - (h.base + h.length - 1);
 
-            return hash_struct(
-                    (MOD1 + prefix_hash[r].hash1 - (l == 0 ? 0 : prefix_hash[l - 1].hash1)) % MOD1,
-                    (MOD2 + prefix_hash[r].hash2 - (l == 0 ? 0 : prefix_hash[l - 1].hash2)) % MOD2,
-                    r - l + 1, l);
-        }
+        return hash_struct(h.hash * pows[d], h.length, h.base + d);
+    }
 
-        hash_struct normalize(hash_struct h, unsigned last_pow) {
-            assert(h.base + h.length - 1 <= last_pow);
+    bool equal(hash_struct h1, hash_struct h2) {
+        if (h1.length != h2.length) return false;
 
-            extend_pows(last_pow + 1);
-            unsigned d = last_pow - (h.base + h.length - 1);
+        int d = max(h1.base + h1.length - 1, h2.base + h2.length - 1);
+        h1 = normalize(h1, d);
+        h2 = normalize(h2, d);
 
-            return hash_struct(
-                    (h.hash1 * pows1[d]) % MOD1,
-                    (h.hash2 * pows2[d]) % MOD2,
-                    h.length, h.base + d);
-        }
+        return h1.hash == h2.hash;
+    }
 
-        bool equal(hash_struct h1, hash_struct h2) {
-            if (h1.length != h2.length) return false;
+protected:
 
-            unsigned d = max(h1.base + h1.length - 1, h2.base + h2.length - 1);
-            h1 = normalize(h1, d);
-            h2 = normalize(h2, d);
+    void extend_pows(int n) {
+        assert(0 <= n);
+        while (pows.size() < n) pows.push_back(pows.back() * P);
+    }
 
-            return h1.hash1 == h2.hash1 && h1.hash2 == h2.hash2;
-        }
+    ull P;
+    vector<ull> pows;
 
-        vector<ull> convert(string s) {
-            vector<ull> v(s.length());
-            for (int i = 0; i < s.length(); i++) v[i] = s[i] - 'a' + 1;
-            return v;
-        }
-
-    protected:
-
-        void extend_pows(int n) {
-            while (pows1.size() < n) pows1.push_back((pows1.back() * P) % MOD1);
-            while (pows2.size() < n) pows2.push_back((pows2.back() * P) % MOD2);
-        }
-
-        vector<ull> pows1, pows2;
-
-    };
-
-}
+};
